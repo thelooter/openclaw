@@ -1,3 +1,4 @@
+import assert from "node:assert/strict";
 import fs from "node:fs/promises";
 import path from "node:path";
 import { hasNodeErrorCode } from "@openclaw/fs-safe/path";
@@ -119,11 +120,11 @@ describe("Agents API input attachment custody", () => {
     const full = await save(bytes);
     const extra = await save("x");
     const fact = { path: full.path, sizeBytes: 1 };
-    expect(decodedFiles(await prepare([fact, fact]))).toEqual([bytes, bytes]);
+    assert.deepEqual(decodedFiles(await prepare([fact, fact])), [bytes, bytes]);
 
     const smaller = await save(bytes.subarray(1));
     const partial = await prepare([fact, { path: extra.path }, fact, { path: smaller.path }]);
-    expect(decodedFiles(partial)).toEqual([bytes, Buffer.from("x"), bytes.subarray(1)]);
+    assert.deepEqual(decodedFiles(partial), [bytes, Buffer.from("x"), bytes.subarray(1)]);
     expect(
       JSON.parse(partial.mappingText.split("\n")[1]!).map(
         ({ attachment }: { attachment: number }) => attachment,
@@ -135,7 +136,7 @@ describe("Agents API input attachment custody", () => {
 
     await fs.appendFile(full.path, "x");
     const oversized = await prepare([fact, { path: extra.path }]);
-    expect(decodedFiles(oversized)).toEqual([Buffer.from("x")]);
+    assert.deepEqual(decodedFiles(oversized), [Buffer.from("x")]);
     expect(oversized.feedbackText).toContain(
       '{"attachment":1,"reason":"exceeds the 5 MiB file limit"}',
     );
